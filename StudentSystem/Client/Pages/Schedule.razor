@@ -1,0 +1,130 @@
+﻿@page "/schedule"
+@inject IScheduleService ScheduleService
+<PageTitle>Selected Schedule</PageTitle>
+
+<h3> Schedule</h3>
+@if (sortedScheduleCourses == null || sortedScheduleCourses.Count == 0)
+{
+    <span>@message</span>
+}
+else
+{
+    <div>
+        @foreach (var course in sortedScheduleCourses)
+        {
+            <div class="containter">
+                <div>
+                     <div class="course-class">
+                    @switch (@course.Day)
+                    {
+                        case 1:
+                            <h3> Saturday </h3>
+                            break;
+                        case 2:
+                            <h3> Sunday</h3>
+                            break;
+                        case 3:
+                            <h3> Monday</h3>
+                            break;
+                        case 4:
+                            <h3> Tuesday</h3>
+                            break;
+                        case 5:
+                            <h3> Wednesday</h3>
+                            break;
+                        case 6:
+                            <h3> Thursday</h3>
+                            break;
+                        case 7:
+                            <h3> Friday</h3>
+                            break;
+                        default:
+                            <h3> TBD </h3>
+                            break;
+                    }
+                    </div>
+                    @if (@course.Timeslot == 1)
+                    {
+                        <h4>8:30 to 10:00 AM</h4>
+                    }
+                    @if (@course.Timeslot == 2)
+                    {
+                        <h4>10:30 to 12:00 PM </h4>
+                    }
+                    @if (@course.Timeslot == 3)
+                    {
+                        <h4>12:30 to 2:00 PM</h4>
+                    }
+                    @if (@course.Timeslot == 4)
+                    {
+                        <h4>2:30 to 4:00 PM</h4>
+                    }
+                </div>
+                <div class="Course_name">
+                    <h5><a herf="/course/@course.CourseId">@course.CourseName</a></h5>
+                    <span>@course.LecturerName</span>
+                </div>
+                <div>
+                    <div class="course-class">@course.ClassId</div>
+                    <div class="course-Credits">@course.CreditHours</div>
+                    <button class="btn-delete" @onclick="@(() =>
+                    RemoveCourseFromSchedule(course.CourseId,course.LecturerID))">
+                        Delete Course
+                    </button>
+                </div>
+              
+              
+                    
+            </div>
+        }
+
+
+        <div class="total-credit-hourse">
+
+            Total Credit Hours for selected (@sortedScheduleCourses.Count) courses : @sortedScheduleCourses.Sum(course => course.CreditHours)
+            
+            
+        </div>
+    </div>
+}
+
+@code {
+    List<ScheduleCourseResponse> scheduleCourses = null;
+    List<ScheduleCourseResponse> sortedScheduleCourses = new List<ScheduleCourseResponse>();
+
+    string message = "Loading Schedule..";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSchedule();
+    }
+
+    private async Task RemoveCourseFromSchedule(int courseId , int lecturerId)
+    {
+        await ScheduleService.RemoveCourseFromSchedule(courseId, lecturerId);
+        await LoadSchedule();
+    }
+
+
+    private async Task LoadSchedule()
+    {
+        await ScheduleService.GetScheduleItemsCount();
+        scheduleCourses = await ScheduleService.GetScheduleCourses();
+
+        if (scheduleCourses == null || scheduleCourses.Count == 0)
+        {
+            message = "There's no registered courses. ";
+           // scheduleCourses = new List<ScheduleCourseResponse>();
+        }
+        else
+        {
+            sortedScheduleCourses = scheduleCourses.OrderBy(x => x.Day).ThenBy(x => x.Timeslot).ToList();
+            //scheduleCourses = await ScheduleService.GetScheduleCourses();   
+        }
+       
+       
+    }
+
+
+
+}

@@ -1,0 +1,29 @@
+﻿@page "/"
+@page "/search/{searchText}/{page:int}"
+@inject ICourseService CourseService
+
+<PageTitle>Student Registration Page</PageTitle>
+<br />
+<CourseList />
+
+@code {
+    [Parameter]
+    public string? SearchText { get; set; } = null;
+
+    [Parameter]
+    public int Page { get; set; } = 1;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (SearchText != null)
+        {
+            await CourseService.SearchCourses(SearchText,Page);
+        }
+        else
+        {
+            await CourseService.GetCourses();
+        }
+
+    }
+}
+

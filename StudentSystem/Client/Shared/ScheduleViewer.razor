@@ -1,0 +1,36 @@
+﻿@inject IScheduleService ScheduleService
+@inject ISyncLocalStorageService LocalStorage
+@implements IDisposable
+<a href="Schedule" class="btn btn-info">
+    <i class="oi oi-list-rich"></i>
+    <span class="badge" > Selected Courses &ensp;:&ensp;@GetScheduleItemsCount()</span>
+</a>
+@code {
+    
+    public int creditHours = 0;
+    private int GetScheduleItemsCount()
+    {
+        var count = LocalStorage.GetItem<int>("scheduleItemsCount");
+        if (count == null)
+        {
+            return 0;
+        }
+        else{
+            return count;
+        }
+
+    }
+
+
+
+    protected override void OnInitialized()
+    {
+        ScheduleService.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        ScheduleService.OnChange -= StateHasChanged;
+    }
+
+}

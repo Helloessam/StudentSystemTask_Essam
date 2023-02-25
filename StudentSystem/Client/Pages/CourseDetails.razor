@@ -1,0 +1,228 @@
+﻿@page "/course/{courseId:int}"
+@inject ICourseService CourseService
+@inject IScheduleService ScheduleService
+
+<style>
+    table {
+        border-collapse: collapse;
+    }
+
+    th,
+    td {
+        border: 1px solid #c6c7cc;
+        padding: 10px 15px;
+    }
+
+    th {
+        font-weight: bold;
+    }
+
+    table.scroll {
+        width: 716px; /* 140px * 5 column + 16px scrollbar width */
+        border-spacing: 0;
+        border: 2px solid black;
+    }
+
+        table.scroll tbody,
+        table.scroll thead tr {
+            display: block;
+        }
+
+        table.scroll tbody {
+            height: 100px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+            table.scroll tbody td,
+            table.scroll thead th {
+                width: 140px;
+                border-right: 1px solid black;
+            }
+
+                table.scroll thead th:last-child {
+                    width: 156px; /* 140px + 16px scrollbar width */
+                }
+
+    thead tr th {
+        height: 30px;
+        line-height: 30px;
+        /*text-align: left;*/
+    }
+
+    tbody {
+        border-top: 2px solid black;
+    }
+
+        tbody td:last-child, thead th:last-child {
+            border-right: none !important;
+        }
+
+
+
+
+</style>
+<h2>Course Details:</h2>
+@if (course == null)
+{
+    <span>@message</span>
+}
+else{
+<table style="width:100%">
+       
+        <tr>
+            <th>Course Name</th>
+            <td>@course.CourseName</td>
+        </tr>
+        <tr>
+            <th>Department</th>
+            <td>@course.Depratment</td>
+        </tr>
+        <tr>
+            <th>Lecturer</th>
+            <td>
+                @if (course.Variants != null && course.Variants.Count > 1)
+                {
+                    <div>
+                        <select class="form-check" @bind="currentLecturerId" >
+                            @foreach (var Variant in course.Variants)
+                            {
+                                <option value="@Variant.CourseLecturerId">@Variant.CourseLecturer.lecturerName</option>
+                            }
+                        </select>
+                    </div>
+                }
+                else
+                {
+                    @course.LecturerName
+                }
+            </td>
+        </tr>
+        <tr>
+            <th>CreditHours</th>
+            <td>@course.CreditHours</td>
+        </tr>
+        <tr>
+            <th>Day</th>
+           @switch (@course.Day)
+            {
+                case 1:
+                                        <td> Saturday </td>
+                    break;
+                case 2:
+                                        <td> Sunday</td>
+                    break;
+                case 3:
+                                        <td> Monday</td>
+                    break;
+                case 4:
+                                        <td> Tuesday</td>
+                    break;
+                case 5:
+                                        <td> Wednesday</td>
+                    break;
+                case 6:
+                                        <td> Thursday</td>
+                    break;
+                case 7:
+                                        <td> Friday</td>
+                    break;
+                default:
+                                        <td> TBD </td>
+                    break;
+            }
+        </tr>
+        <tr>
+            <th>Time Slot</th>
+            @if (@course.Timeslot == 1)
+            {
+                                <td>8:30 to 10:00 AM</td>
+            }
+            @if (@course.Timeslot == 2)
+            {
+                                <td>10:30 to 12:00 PM </td>
+            }
+            @if (@course.Timeslot == 3)
+            {
+                                <td>12:30 to 2:00 PM</td>
+            }
+            @if (@course.Timeslot == 4)
+            {
+                                <td>2:30 to 4:00 PM</td>
+            }
+        </tr>
+        <tr>
+           
+            <th>Class ID</th>
+           
+            <td>@GetSelectedVariant().ClassId.ToString()</td>
+            
+        </tr>
+        <br/>
+        <br/>
+        <button class="btn btn-primary" @onclick="AddToSchedule">
+            <i class="oi oi-list-rich"></i>&nbsp;&nbsp;&nbsp;Add to Schedule
+        </button>
+        <br/>
+        <br/>
+         <div class="text-danger">
+        <span>@info_message</span>
+    </div>
+
+    </table>
+
+@code {
+    private Course? course = null;
+    private string message = string.Empty;
+    string info_message = string.Empty;
+    private int currentLecturerId = 00000;
+
+    [Parameter]
+    public int courseId { get; set; }
+    protected override async Task OnParametersSetAsync() {
+        // course = CourseService.Courses.Find(p => p.courseId == courseId);
+        message = "Loading Course Details...";
+        var result = await CourseService.GetCourse(courseId);
+        if (!result.Success)
+        {
+            message = result.Message;
+        }
+        else
+        {
+            course = result.Data;
+            if (course.Variants.Count > 0)
+            {
+                currentLecturerId = course.Variants[0].CourseLecturerId;
+            }
+
+        }
+
+    }
+
+    private CourseVariant GetSelectedVariant()
+    {
+        var variant = course.Variants.FirstOrDefault(v => v.CourseLecturerId == currentLecturerId);
+        return variant;
+    }
+
+
+
+    private async Task AddToSchedule()
+    {
+        var courseVariant = GetSelectedVariant();
+        string messageCssClass = string.Empty;
+        
+        var scheduleItem = new ScheduleItem
+            {
+                CourseId = courseVariant.courseId,
+                LecturerId = courseVariant.CourseLecturerId,
+            };
+         var result = await ScheduleService.AddToSchedule(scheduleItem);
+         info_message = result;
+       
+    }
+}
+
+
+
+}

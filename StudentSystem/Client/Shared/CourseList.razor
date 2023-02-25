@@ -1,0 +1,149 @@
+﻿<!--Injecting Http Client Class which send http requests and recieve http responses from resource identified by a url -->
+@inject ICourseService CourseService
+@inject HttpClient Http
+@implements IDisposable
+
+@if (CourseService.Courses == null || CourseService.Courses.Count == 0)
+{
+    <span>@CourseService.Message</span>
+}
+else
+{
+    <table class="table">
+        <!-- CREATING TABLE HEADER WITH TITLE -->
+        <thead>
+            <tr>
+                <th>Course ID</th>
+                <th>Course Name</th>
+                <th>Department</th>
+                <th>Lecturer</th>
+                <th>CreditHours</th>
+                <th>Day</th>
+                <th>Time Slot</th>
+                <th> Class ID</th>
+
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Iterating through Returned Courses List and Displaying them through an HTML Syntax of a Table  -->
+            @foreach (var crs in CourseService.Courses)
+            {
+                <tr>
+                    <td>@crs.courseId</td>
+                    <td> <a href="/course/@crs.courseId">@crs.CourseName</a></td>
+                    <td>@crs.Depratment</td>
+                    <td>@crs.LecturerName</td>
+                    <td>@crs.CreditHours</td>
+                    @switch (@crs.Day)
+                    {
+                        case 1:
+                            <td> Saturday </td>
+                            break;
+                        case 2:
+                            <td> Sunday</td>
+                            break;
+                        case 3:
+                            <td> Monday</td>
+                            break;
+                        case 4:
+                            <td> Tuesday</td>
+                            break;
+                        case 5:
+                            <td> Wednesday</td>
+                            break;
+                        case 6:
+                            <td> Thursday</td>
+                            break;
+                        case 7:
+                            <td> Friday</td>
+                            break;
+                        default:
+                            <td> TBD </td>
+                            break;
+                    }
+
+
+
+                    @if (@crs.Timeslot == 1)
+                    {
+                        <td>8:30 to 10:00 AM</td>
+                    }
+                    @if (@crs.Timeslot == 2)
+                    {
+                        <td>10:30 to 12:00 PM </td>
+                    }
+                    @if (@crs.Timeslot == 3)
+                    {
+                        <td>12:30 to 2:00 PM</td>
+                    }
+                    @if (@crs.Timeslot == 4)
+                    {
+                        <td>2:30 to 4:00 PM</td>
+                    }
+                    <td>@GetClassId(crs)</td>
+                    @*<td>@course.ClassID</td>*@ 
+                   <td>
+                       <a href="/course/@crs.courseId">
+                       <button type="button" class="btn btn-light" >View Course</button>
+                        </a>
+                       </td>
+
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    for (var i=1; i < CourseService.PageCount; i++)
+    {
+        <a class="btn
+           @(i==CourseService.CurrentPage?"btn-info":"btn-outline-info")
+            page-selection" 
+            href="/search/@CourseService.LastSearchText/@i">@i</a>
+    }
+}
+
+
+
+@code {
+    // Creating A Generic List of type T that can be sorted , searched and manipulated through commbined methods 
+    //private static List<Course> Courses = new List<Course>();
+    // Asynchronous operation: Enabling code that reads like sequence of statments but excute in order based on external resource allocation and when tasks are completed  
+    //start a task then turn your attention to tasks that are ready for your attention
+    //OnInitializedAsync invoked when component ready to start -> overridig this method to perform Asynchronous operation and want a component to refresh after the operation is completed
+    protected override  void OnInitialized()
+    {   
+        //await CourseService.GetCourses();
+        CourseService.CoursesChanged += StateHasChanged;
+        //asynchronous operation that returns a task object -> Sends a get request and deserialize the response body as json 
+        /*var result = 
+        await Http.GetFromJsonAsync<ServiceResponse<List<Course>>>("api/Course");
+        if (result != null && result.Data != null)
+        //getting resulted data and assign its values to list of courses to utilize it in HTML body of the course list component 
+            Courses = result.Data;
+        */
+
+
+    }
+    public void Dispose()
+    {
+        CourseService.CoursesChanged -= StateHasChanged;
+    }
+
+
+    private string GetClassId(Course course)
+    {
+        var variants = course.Variants;
+        if (variants.Count == 0)
+        {
+            return string.Empty;
+        }
+        else if (variants.Count == 1)
+        {
+            return $"{variants[0].ClassId}";
+        }
+        return $"{variants[0].ClassId}";
+    }
+
+
+}

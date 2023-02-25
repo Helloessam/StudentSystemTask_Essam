@@ -1,0 +1,30 @@
+﻿@inject ILocalStorageService LocalStorage
+@inject NavigationManager NavigationManager
+@inject IScheduleService ScheduleService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="userButtons">
+    <AuthorizeView>
+        <NotAuthorized>
+            <a class="btn btn-sm" href="register"><i class="oi oi-person"></i> SignUp </a>
+            <a class="btn btn-sm" href="login?returnUrl=@NavigationManager.ToBaseRelativePath(NavigationManager.Uri)"> <i class="oi oi-account-login"></i> Login</a>
+        </NotAuthorized>
+        <Authorized>
+            <a class="btn btn-sm" href="profile"> <i class="oi oi-aperture"></i> Profile </a>
+             <a class="btn btn-sm" @onclick="Logout" href="logout"> <i class="oi oi-account-logout"></i> Logout </a>
+        </Authorized>
+    </AuthorizeView>
+
+    </div>
+<div class="login-button">
+  
+</div>
+@code {
+    private async Task Logout()
+    {
+        await LocalStorage.RemoveItemAsync("authToken");
+        await ScheduleService.GetScheduleItemsCount();
+        await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        NavigationManager.NavigateTo("");
+    }
+}
